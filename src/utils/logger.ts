@@ -1,8 +1,13 @@
 export const logger = {
-  info(message: string) {
-    console.log(message);
+  info(message: string, meta?: unknown) {
+    console.log(message, meta);
   },
-  error(message: string, err?: unknown) {
-    console.error(message, err);
+
+  warn(message: string, meta?: unknown) {
+    console.warn(message, meta);
+  },
+
+  error(message: string, meta?: unknown) {
+    console.error(message, meta);
   },
 };
