@@ -3,6 +3,12 @@ import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 import { AppError } from "../utils/AppError.js";
 import { env } from "../config/env.js";
+import {
+  registerSchema,
+  loginSchema,
+  type RegisterInput,
+  type LoginInput,
+} from "../validators/authSchemas.js";
 
 //  Constants 
 
@@ -21,55 +27,44 @@ export interface AuthPayload {
   token: string;
 }
 
-// Helpers 
-
-const isValidEmail = (email: string): boolean =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-const isValidPassword = (password: string): boolean => password.length >= 8;
+//  Helpers 
 
 const signToken = (userId: string, email: string): string =>
   jwt.sign({ sub: userId, email }, env.jwtSecret, {
     expiresIn: TOKEN_EXPIRES_IN,
   });
 
-// Service Functions 
+/**
+ * Validates raw input with a Zod schema and throws a 400 AppError
+ * with a human-readable message derived from the first validation issue.
+ */
+function validate<T>(schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { issues: { message: string }[] } } }, data: unknown): T {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const message = result.error.issues[0]?.message ?? "Invalid input";
+    throw new AppError(message, 400);
+  }
+  return result.data;
+}
+
+//  Service Functions 
 
 /**
- * Validates input, hashes the password, persists the user,
+ * Validates input via Zod, hashes the password, persists the user,
  * and returns a signed JWT alongside the public user object.
  */
-export const registerUser = async (
-  name?: string,
-  email?: string,
-  password?: string,
-): Promise<AuthPayload> => {
-  // Input validation
-  if (!name || !email || !password) {
-    throw new AppError("Name, email, and password are required", 400);
-  }
-  if (!isValidEmail(email)) {
-    throw new AppError("Invalid email format", 400);
-  }
-  if (!isValidPassword(password)) {
-    throw new AppError("Password must be at least 8 characters", 400);
-  }
+export const registerUser = async (body: unknown): Promise<AuthPayload> => {
+  const { name, email, password } = validate<RegisterInput>(registerSchema, body);
 
-  const normalizedEmail = email.toLowerCase().trim();
-
-  // Uniqueness check
-  const existingUser = await User.findOne({ email: normalizedEmail });
+  // Uniqueness check (email is already lowercased + trimmed by Zod)
+  const existingUser = await User.findOne({ email });
   if (existingUser) {
     throw new AppError("Email already in use", 409);
   }
 
   // Persist user
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-  const user = await User.create({
-    name: name.trim(),
-    email: normalizedEmail,
-    password: passwordHash,
-  });
+  const user = await User.create({ name, email, password: passwordHash });
 
   return {
     user: {
@@ -83,27 +78,16 @@ export const registerUser = async (
 };
 
 /**
- * Validates credentials and returns a signed JWT alongside
+ * Validates credentials via Zod and returns a signed JWT alongside
  * the public user object.
  */
-export const loginUser = async (
-  email?: string,
-  password?: string,
-): Promise<AuthPayload> => {
-  // Input validation
-  if (!email || !password) {
-    throw new AppError("Email and password are required", 400);
-  }
-
-  const normalizedEmail = email.toLowerCase().trim();
+export const loginUser = async (body: unknown): Promise<AuthPayload> => {
+  const { email, password } = validate<LoginInput>(loginSchema, body);
 
   // Constant-time failure to prevent user enumeration
-  const user = await User.findOne({ email: normalizedEmail }).select(
-    "+password",
-  );
+  const user = await User.findOne({ email }).select("+password");
 
-  // If user doesn't exist, we still compare the password against a dummy hash
-  // to ensure the operation takes the same amount of time.
+  // Always run bcrypt.compare even if user not found to prevent timing attacks
   const DUMMY_HASH = "$2b$10$abcdefghijklmnopqrstuvwxyza1234567890abcdefghijklm";
   const passwordToCompare = user ? user.password : DUMMY_HASH;
   const passwordMatches = await bcrypt.compare(password, passwordToCompare);

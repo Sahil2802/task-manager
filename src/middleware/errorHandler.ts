@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 import { logger } from "../utils/logger.js";
 import { env } from "../config/env.js";
@@ -13,6 +14,12 @@ const errorMap: Record<string, (err: Error) => AppError> = {
 // Normalize unknown errors into AppError
 function normalizeError(err: unknown): AppError {
   if (err instanceof AppError) return err;
+
+  // Zod validation errors (safety net — normally caught in the service layer)
+  if (err instanceof ZodError) {
+    const message = err.issues[0]?.message ?? "Invalid input";
+    return new AppError(message, 400);
+  }
   if (
     err instanceof Error &&
     typeof (err as { code?: unknown }).code === "number"
