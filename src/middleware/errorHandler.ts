@@ -15,7 +15,7 @@ const errorMap: Record<string, (err: Error) => AppError> = {
 function normalizeError(err: unknown): AppError {
   if (err instanceof AppError) return err;
 
-  // Zod validation errors (safety net — normally caught in the service layer)
+  // Zod validation errors (safety net - normally caught in the service layer)
   if (err instanceof ZodError) {
     const message = err.issues[0]?.message ?? "Invalid input";
     return new AppError(message, 400);
