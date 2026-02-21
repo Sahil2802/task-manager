@@ -102,9 +102,11 @@ export const loginUser = async (
     "+password",
   );
 
-  const passwordMatches = user
-    ? await bcrypt.compare(password, user.password)
-    : false;
+  // If user doesn't exist, we still compare the password against a dummy hash
+  // to ensure the operation takes the same amount of time.
+  const DUMMY_HASH = "$2b$10$abcdefghijklmnopqrstuvwxyza1234567890abcdefghijklm";
+  const passwordToCompare = user ? user.password : DUMMY_HASH;
+  const passwordMatches = await bcrypt.compare(password, passwordToCompare);
 
   if (!user || !passwordMatches) {
     throw new AppError("Invalid email or password", 401);
