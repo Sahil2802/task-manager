@@ -5,7 +5,7 @@ import { router } from "./routes/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFound } from "./middleware/notFound.js";
 
-// ─── Rate Limiters ────────────────────────────────────────────────────────────
+//  Rate Limiters 
 
 // Strict limiter for auth endpoints (brute-force protection)
 export const authLimiter = rateLimit({
@@ -25,7 +25,7 @@ const apiLimiter = rateLimit({
   message: { error: "TOO_MANY_REQUESTS", message: "Too many requests, please slow down." },
 });
 
-// ─── App Factory ──────────────────────────────────────────────────────────────
+//  App Factory 
 
 export const createApp = () => {
   const app = express();

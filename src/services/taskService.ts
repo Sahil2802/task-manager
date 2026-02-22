@@ -9,10 +9,16 @@ import {
   type TaskQuery,
 } from "../validators/taskSchemas.js";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//  Helpers
 
 function validate<T>(
-  schema: { safeParse: (data: unknown) => { success: true; data: T } | { success: false; error: { issues: { message: string }[] } } },
+  schema: {
+    safeParse: (
+      data: unknown,
+    ) =>
+      | { success: true; data: T }
+      | { success: false; error: { issues: { message: string }[] } };
+  },
   data: unknown,
 ): T {
   const result = schema.safeParse(data);
@@ -23,7 +29,7 @@ function validate<T>(
   return result.data;
 }
 
-// ─── Service Functions ────────────────────────────────────────────────────────
+//  Service Functions
 
 /**
  * Creates a new task scoped to the authenticated user.
@@ -99,6 +105,7 @@ export const updateTask = async (
   if (!task) throw new AppError("Task not found", 404);
   if (task.userId.toString() !== userId) throw new AppError("Forbidden", 403);
 
+  // This copies properties from input onto the existing task object.
   Object.assign(task, input);
   await task.save();
   return task;
