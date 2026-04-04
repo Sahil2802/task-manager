@@ -4,3 +4,5 @@
 .env
 
 *.txt
+*.md
+!README.md
