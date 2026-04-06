@@ -1,6 +1,6 @@
 import "dotenv/config";
 import express from "express";
-import auth from "./routes/auth.js";
+import auth from "./routes/auth.routes.js";
 
 // dotenv.config();
 // Creates an express application
