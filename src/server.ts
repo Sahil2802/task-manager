@@ -1,11 +1,19 @@
+import "dotenv/config";
 import express from "express";
-import dotenv from "dotenv";
+import auth from "./routes/auth.routes.js";
 
-dotenv.config();
-
+// dotenv.config();
 // Creates an express application
 const app = express();
+app.use(express.json());
+
+// Routes
+app.use("/api/auth", auth);
+
+app.get("/", (_req, res) => {
+  res.send("Hello world!");
+});
 
 app.listen(process.env.PORT || 3000, () => {
-  console.log(`Server is running in ${process.env.PORT}`);
+  console.log(`Server is running in http://localhost:${process.env.PORT}`);
 });
