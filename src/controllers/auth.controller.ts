@@ -64,8 +64,8 @@ const login = async (req: Request, res: Response) => {
   if (error) {
     return res.status(500).json({ message: "Internal Server Error" });
   }
-  if (!data) {
-    return res.status(404).json({ message: "User is not registered" });
+  if (!data || data.length === 0) {
+    return res.status(401).json({ message: "Invalid email or password" });
   }
   const hashedPassword = data[0]!.password;
   const passwordMatch = await bcrypt.compare(password, hashedPassword);
@@ -78,7 +78,7 @@ const login = async (req: Request, res: Response) => {
       .status(200)
       .json({ message: "Logged in successfully", token: token });
   } else {
-    return res.status(401).json({ message: "Incorrect username or password" });
+    return res.status(401).json({ message: "Invalid email or password" });
   }
 };
 

@@ -58,4 +58,30 @@ const deleteTask = async (req: Request, res: Response) => {
   }
 };
 
-export { getAllTasks, createTask, deleteTask };
+const updateTask = async (req: Request, res: Response) => {
+  const { id: user_id } = req.user;
+  const { title } = req.body;
+  const { id } = req.params;
+
+  if (!title) {
+    return res.status(400).json({ message: "Task title cannot be empty" });
+  }
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .update({ title: title })
+    .select()
+    .eq("id", id)
+    .eq("user_id", user_id);
+
+  if (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+  if (data?.length === 0) {
+    return res.status(404).json({ message: "Task not found" });
+  } else {
+    return res.status(200).json({ message: "Task successfully updated" });
+  }
+};
+
+export { getAllTasks, createTask, deleteTask, updateTask };

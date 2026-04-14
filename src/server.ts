@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, { type Request, type Response } from "express";
 import auth from "./routes/auth.routes.js";
 import tasks from "./routes/tasks.routes.js";
 
