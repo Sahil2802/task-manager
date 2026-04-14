@@ -3,7 +3,7 @@
 
 .env
 .sql
-
+.testing
 
 
 *.txt

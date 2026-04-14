@@ -1,6 +1,7 @@
 import { supabase } from "../lib/supabase.js";
+import type { Request, Response } from "express";
 
-const getAllTasks = async (req, res) => {
+const getAllTasks = async (req: Request, res: Response) => {
   // get authenticated user's id
   const { id } = req.user;
 
@@ -17,7 +18,7 @@ const getAllTasks = async (req, res) => {
 };
 
 // controller to create the task. Insert the task with user_id(in req.body) in the tasks table
-const createTask = async (req, res) => {
+const createTask = async (req: Request, res: Response) => {
   // get authenticated user's id
   const { id } = req.user;
   const { title, due_date } = req.body;
@@ -36,4 +37,25 @@ const createTask = async (req, res) => {
   }
 };
 
-export { getAllTasks, createTask };
+const deleteTask = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { id: user_id } = req.user;
+
+  const { data, error } = await supabase
+    .from("tasks")
+    .delete()
+    .select()
+    .eq("id", id)
+    .eq("user_id", user_id);
+
+  if (error) {
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+  if (data?.length === 0) {
+    return res.status(404).json({ message: "Task not found" });
+  } else {
+    return res.status(200).json({ message: "Task deleted successfully" });
+  }
+};
+
+export { getAllTasks, createTask, deleteTask };

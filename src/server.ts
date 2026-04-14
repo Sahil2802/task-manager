@@ -12,7 +12,7 @@ app.use(express.json());
 app.use("/api/auth", auth);
 app.use("/api/tasks", tasks);
 
-app.get("/", (_req, res) => {
+app.get("/", (_req: Request, res: Response) => {
   res.send("Hello world!");
 });
 

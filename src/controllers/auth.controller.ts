@@ -1,8 +1,9 @@
 import { supabase } from "../lib/supabase.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import type { Request, Response } from "express";
 
-const signup = async (req, res) => {
+const signup = async (req: Request, res: Response) => {
   // ------ Check the data before inserting into db -----
 
   // Check if any of the fields is empty
@@ -47,7 +48,7 @@ const signup = async (req, res) => {
     .json({ message: "Succesfully registered", token: token });
 };
 
-const login = async (req, res) => {
+const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
